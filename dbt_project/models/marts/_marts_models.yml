@@ -1,0 +1,115 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: one row per real customer (customer_unique_id), with order history summary
+    columns:
+      - name: customer_key
+        description: surrogate key, hash of customer_unique_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_unique_id
+        description: the real customer. olist's customer_id is per order, so this is the person
+        tests:
+          - unique
+          - not_null
+      - name: city
+        description: city from the customer's most recent order
+      - name: state
+        description: two-letter brazilian state from the most recent order
+      - name: first_order_at
+        description: timestamp of the customer's first order
+      - name: last_order_at
+        description: timestamp of the customer's latest order
+      - name: total_orders
+        description: number of distinct orders placed
+      - name: is_repeat_customer
+        description: true if the customer has more than one order
+
+  - name: dim_products
+    description: one row per product with english category name
+    columns:
+      - name: product_key
+        description: surrogate key, hash of product_id
+        tests:
+          - unique
+          - not_null
+      - name: product_id
+        description: olist product id
+        tests:
+          - unique
+          - not_null
+      - name: category_name_pt
+        description: original portuguese category name
+      - name: category_name
+        description: english category name, falling back to portuguese then 'unknown'
+      - name: weight_g
+        description: product weight in grams
+      - name: length_cm
+        description: package length in cm
+      - name: height_cm
+        description: package height in cm
+      - name: width_cm
+        description: package width in cm
+      - name: photos_qty
+        description: number of product photos on the listing
+
+  - name: fct_order_items
+    description: one row per item sold. order-level fields repeat for each item in the same order
+    columns:
+      - name: order_item_key
+        description: surrogate key, hash of order_id + item number
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: the order this item belongs to
+        tests:
+          - not_null
+      - name: order_item_number
+        description: position of the item within the order (1, 2, 3...)
+      - name: customer_key
+        description: links to dim_customers
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_key
+      - name: product_key
+        description: links to dim_products
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: product_key
+      - name: seller_id
+        description: seller who sold the item
+      - name: order_date
+        description: date the order was placed
+        tests:
+          - not_null
+      - name: order_status
+        description: current order status (delivered, shipped, canceled...)
+      - name: customer_order_number
+        description: 1 for the customer's first order, 2 for their second, and so on
+      - name: price
+        description: item price in brl, excluding freight
+        tests:
+          - not_null
+      - name: freight_value
+        description: shipping cost charged for this item in brl
+      - name: item_total
+        description: price + freight
+      - name: delivered_date
+        description: date the order reached the customer. null if not delivered
+      - name: estimated_delivery_date
+        description: delivery date promised to the customer at purchase
+      - name: days_to_deliver
+        description: days from purchase to delivery
+      - name: days_late
+        description: delivered date minus promised date. positive = late, negative = early
+      - name: review_score
+        description: 1 to 5 review score for the order (latest review). null if no review
