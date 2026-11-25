@@ -1,0 +1,126 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: one row per order, cleaned and typed
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+      - name: order_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['delivered', 'shipped', 'canceled', 'unavailable', 'invoiced', 'processing', 'created', 'approved']
+
+  - name: stg_customers
+    description: one row per customer_id. customer_id is per order, customer_unique_id is the real person
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_unique_id
+        tests:
+          - not_null
+
+  - name: stg_order_items
+    description: one row per item in an order
+    columns:
+      - name: order_item_key
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: product_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+      - name: seller_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_sellers')
+                field: seller_id
+      - name: price
+        tests:
+          - not_null
+
+  - name: stg_order_payments
+    description: one row per payment. an order can have several
+    columns:
+      - name: payment_key
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+
+  - name: stg_order_reviews
+    description: latest review per order
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: review_score
+        tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
+
+  - name: stg_products
+    description: one row per product
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+      - name: category_name_pt
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_category_translation')
+                field: category_name_pt
+              config:
+                severity: warn
+
+  - name: stg_sellers
+    description: one row per seller
+    columns:
+      - name: seller_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_category_translation
+    description: portuguese to english category names
+    columns:
+      - name: category_name_pt
+        tests:
+          - unique
+          - not_null
