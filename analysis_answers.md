@@ -74,7 +74,7 @@ These are the things I'd tell a client up front rather than bury:
 
 The three data quality checks I'd want running in production:
 
-1. **Key and relationship tests on every run.** These are already built (56 dbt tests): every key is unique and not null, and every item, payment and review links to a real order. Snowflake doesn't enforce these itself, so without the tests nothing stops a duplicate or orphaned row from slipping in.
+1. **Key and relationship tests on every run.** These are already built (45 dbt tests): every key is unique and not null, and every item, payment and review links to a real order. Snowflake doesn't enforce these itself, so without the tests nothing stops a duplicate or orphaned row from slipping in.
 2. **Freshness and row counts on the raw load.** If `_loaded_at` is older than expected, or a table suddenly has far fewer rows than last time, something should raise an alert. A half-loaded file is the failure most likely to go unnoticed.
 3. **Basic business rules.** Price above zero, review scores between 1 and 5, and no order marked delivered without a delivery date. These catch upstream problems that would quietly skew the delivery and revenue numbers this analysis depends on.
 
